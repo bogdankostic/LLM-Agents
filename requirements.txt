@@ -3,3 +3,4 @@ weaviate-haystack
 datasets
 sentence-transformers>=3.0.0
 transformers[torch]
+numpy
