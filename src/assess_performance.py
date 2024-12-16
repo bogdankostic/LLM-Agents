@@ -1,5 +1,6 @@
 from ast import literal_eval
 import argparse
+import json
 
 from haystack_integrations.document_stores.weaviate.document_store import WeaviateDocumentStore
 from haystack_integrations.components.retrievers.weaviate import WeaviateBM25Retriever, WeaviateEmbeddingRetriever
@@ -61,18 +62,60 @@ if __name__ == "__main__":
     comments_df[embedding_column] = comments_df[embedding_column].apply(literal_eval)
     comments_df["arxiv_id"] = comments_df["arxiv_id"].astype(str)
 
-    # Retrieve articles
+    # Retrieve articles with BM25
     bm25_results = []
-    for post in tqdm(comments_df[text_column].values):
+    bm25_ranked_docs_per_comment = []
+    for post, comment_id in tqdm(
+            zip(comments_df[text_column].values,
+                comments_df["id"].values),
+            total=len(comments_df)
+    ):
         retrieved_docs = bm25_retriever.run(query=post)["documents"]
         retrieved_ids = [doc.id for doc in retrieved_docs]
         bm25_results.append(retrieved_ids)
 
+        ranked_docs = [{
+            "arxiv_id": doc.meta["arxiv_id"],
+            "title": doc.meta["title"],
+            "abstract": doc.content,
+            "authors": doc.meta["authors"],
+            "date": doc.meta["date"],
+            "categories": doc.meta["categories"],
+        } for doc in retrieved_docs]
+        ranked_docs = {
+            "comment_id": comment_id,
+            "query": post,
+            "ranked_docs": ranked_docs
+        }
+        bm25_ranked_docs_per_comment.append(ranked_docs)
+
+    # Retrieve articles with Sentence Transformers Embeddings
     embedding_results = []
-    for emb in tqdm(comments_df[embedding_column].values):
+    emb_ranked_docs_per_comment = []
+    for emb, comment_id, query in tqdm(
+            zip(comments_df[embedding_column].values,
+                comments_df["id"].values,
+                comments_df[text_column].values),
+            total=len(comments_df)
+    ):
         retrieved_docs = embedding_retriever.run(query_embedding=emb)["documents"]
         retrieved_ids = [doc.id for doc in retrieved_docs]
         embedding_results.append(retrieved_ids)
+
+        ranked_docs = [{
+            "arxiv_id": doc.meta["arxiv_id"],
+            "title": doc.meta["title"],
+            "abstract": doc.content,
+            "authors": doc.meta["authors"],
+            "date": doc.meta["date"],
+            "categories": doc.meta["categories"],
+        } for doc in retrieved_docs]
+        ranked_docs = {
+            "comment_id": comment_id,
+            "query": query,
+            "ranked_docs": ranked_docs
+        }
+        emb_ranked_docs_per_comment.append(ranked_docs)
 
     # Print metrics
     print("Performance Metrics on Sampled Comments")
@@ -133,3 +176,10 @@ if __name__ == "__main__":
     print(f"Embedding Recall@10: {np.nanmean(embedding_r_at_10)} (std: {np.nanstd(embedding_r_at_10)})")
     print(f"Embedding Recall@100: {np.nanmean(embedding_r_at_100)} (std: {np.nanstd(embedding_r_at_100)})")
     print(f"Embedding MRR: {np.nanmean(embedding_mrr_values)} (std: {np.nanstd(embedding_mrr_values)})")
+
+    # Save ranked documents
+    filename = file_path.split(".")[0]
+    with open(f"{text_column}_bm25_ranked_docs.json", "w") as f:
+        json.dump(bm25_ranked_docs_per_comment, f)
+    with open(f"{text_column}_embedding_ranked_docs.json", "w") as f:
+        json.dump(emb_ranked_docs_per_comment, f)
