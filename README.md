@@ -1,4 +1,4 @@
-# CS294/194-196: Large Language Model Agents
+# CS194/294-196: Large Language Model Agents
 ## Project: Towards Recovering Citations Missing from Social Media Posts: A Benchmark for the Retrieval of Primary Sources Implicitly Referenced in Reddit Comments
 Team Name: The Scientists  
 Track: Benchmarks  
@@ -44,7 +44,7 @@ To retrieve papers for the Reddit comments using both BM25 and dense embedding r
 python src/assess_performance.py \
   --file_path <PATH_TO_REDDIT_COMMENTS_CSV_WITH_EMBEDDINGS> \
   --column_name <COLUMN_NAME_TO_USE_FOR_BM25_EVALUATION> \
-  --embedding_column <COLUMN_CONTAINING_EMBEDDINGS_FOR_DENSE_RETRIEVAL> \
+  --embedding_column <COLUMN_CONTAINING_EMBEDDINGS_FOR_DENSE_RETRIEVAL> 
 ```
 
 ### 7) Rerank Retrieved Papers
