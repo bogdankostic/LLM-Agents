@@ -7,8 +7,8 @@ Team Members: Bogdan Kostić, Yantong Zhong, Dan Hickey, Kanav Mittal, Lydia Wan
 ### 1) Installation
 To install the required packages, run the following command:
 ```bash
-git clone https://github.com/bogdankostic/LLM-Agents.git
-cd LLM-Agents
+git clone https://github.com/bogdankostic/reddit-citation-recovery.git
+cd reddit-citation-recovery
 pip install -r requirements.txt
 ```
 
