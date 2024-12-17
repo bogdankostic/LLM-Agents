@@ -16,6 +16,7 @@ import numpy as np
 from scipy import stats
 from dotenv import load_dotenv
 import argparse
+from time import sleep
 
 system_instruction = """
         You are a helpful assistant specializing in being able to understand scientific abstracts and matching social media comments to scientific papers.
@@ -31,6 +32,7 @@ system_instruction = """
         Return {'id': str, 'title': str}
     """
 
+accepted_models = ["gemini-1.5-flash", "gpt-4o-mini", "gpt-3.5-turbo", "llama3.1-70b-instruct-berkeley"]
 
 def extract_paper_description(papers: list[dict], num_papers: int = 10):
     """Extracts the arXiv ID, title, and abstract from the first `num_papers` papers
@@ -81,7 +83,7 @@ def prepare_dataframe(rankings, comments, num_papers=10):
 
 
 def generate_openai_responses(
-    prepared_dataframe, results_folder, client, model, unique_identifier=None
+    prepared_dataframe, results_folder, client, model, unique_identifier=None, wait_sec=0
 ):
 
     responses_path = os.path.join(results_folder, f"{unique_identifier}_responses.pkl")
@@ -115,11 +117,13 @@ def generate_openai_responses(
             with open(responses_path, "wb") as f:
                 pickle.dump(responses, f)
 
+        sleep(wait_sec)
+
     return responses
 
 
 def generate_google_responses(
-    prepared_dataframe, results_folder, model, unique_identifier=None
+    prepared_dataframe, results_folder, model, unique_identifier=None, wait_sec=0,
 ):
     gemini = genai.GenerativeModel(
         model_name=model, system_instruction=system_instruction
@@ -148,6 +152,8 @@ def generate_google_responses(
         if unique_identifier is not None:
             with open(responses_path, "wb") as f:
                 pickle.dump(responses, f)
+
+        sleep(wait_sec)
 
     return responses
 
@@ -233,27 +239,23 @@ if __name__ == "__main__":
     llama_client = OpenAI(
         api_key=os.getenv("LLAMA_API_KEY"), base_url=os.getenv("LLAMA_URL")
     )
-    llama_model = "llama3.1-70b-instruct-berkeley"
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--rankings", type=str)
     parser.add_argument("--comments", type=str)
-    parser.add_argument("--model", choices=["gemini", "gpt4omini", "gpt3.5", "llama"])
+    parser.add_argument("--llm", choices=accepted_models)
     parser.add_argument("--k", type=int, default=10)
     parser.add_argument("--o", type=str)
+    parser.add_argument("--wait_sec", type=int, default=0)
     args = parser.parse_args()
 
     rankings_path = args.rankings
     comments_path = args.comments
     k = args.k
-    model = args.model
+    model = args.llm
     output_path = args.o
-    assert (
-        model == "gemini"
-        or model == "gpt4omini"
-        or model == "gpt3.5"
-        or model == "llama"
-    )
+    wait_sec = args.wait_sec
+    assert model in accepted_models
 
     print("Reading comments")
     comments = pd.read_csv(comments_path)
@@ -274,21 +276,21 @@ if __name__ == "__main__":
     os.makedirs("reranker_results", exist_ok=True)
 
     print("Querying LLM")
-    if model == "gemini":
+    if model == "gemini-1.5-flash":
         responses = generate_google_responses(
-            prepared, "reranker_results/", "gemini-1.5-flash"
+            prepared, "reranker_results/", "gemini-1.5-flash", wait_sec=wait_sec
         )
-    elif model == "gpt4omini":
+    elif model == "gpt-4o-mini":
         responses = generate_openai_responses(
-            prepared, "reranker_results/", openai_client, "gpt-4o-mini"
+            prepared, "reranker_results/", openai_client, "gpt-4o-mini", wait_sec=wait_sec
         )
-    elif model == "gpt3.5":
+    elif model == "gpt-3.5-turbo":
         responses = generate_openai_responses(
-            prepared, "reranker_results/", openai_client, "gpt-3.5-turbo"
+            prepared, "reranker_results/", openai_client, "gpt-3.5-turbo", wait_sec=wait_sec
         )
     else:
         responses = generate_openai_responses(
-            prepared, "reranker_results/", llama_client, llama_model
+            prepared, "reranker_results/", llama_client, "llama3.1-70b-instruct-berkeley", wait_sec=wait_sec
         )
 
     print("Calculating performance")

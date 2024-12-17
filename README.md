@@ -57,7 +57,8 @@ To rerank the retrieved papers using LLMs and evaluate the results, run the foll
 python src/rerank.py \
   --rankings <PATH_TO_RANKINGS_JSON_OUTPUT_BY_STEP6> \
   --comments <PATH_TO_CSV_WITH_SAMPLE_COMMENTS> \
-  --model <ONE OF "gemini", "gpt4omini", "gpt3.5", OR "llama"> \
+  --llm <ONE OF "gemini-1.5-flash", "gpt-4o-mini", "gpt-3.5-turbo", OR "llama3.1-70b-instruct-berkeley"> \
   --k <K TOP PAPERS ARE INCLUDED IN PROMPT, DEFAULT 10> \
   --o <OUTPUT CSV FOR RESULTS>
+  --wait_sec <TIME TO WAIT BETWEEN EACH LLM CALL>
 ```
