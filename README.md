@@ -27,7 +27,11 @@ python src/index_articles.py
 ### 4) Rewrite Reddit Comments
 To rewrite the Reddit comments using LLMs, run the following command:
 ```bash
-TODO
+python src/rewrite.py \
+  --file_path <PATH_TO_REDDIT_COMMENTS_CSV> \
+  --column_names <COLUMN_NAMES_TO_REWRITE> \
+  --llm <ONE OF "gemini-1.5-flash", "gpt-4o-mini", "gpt-3.5-turbo", OR "llama3.1-70b-instruct-berkeley"> \
+  --prompt <ONE OF "simulate_abstract", "remove_text", "scientific_style", "search_query"> \
 ```
 
 ### 5) Embed Reddit Comments
