@@ -4,3 +4,9 @@ datasets
 sentence-transformers>=3.0.0
 transformers[torch]
 numpy
+pandas
+google-generativeai
+jsonlines
+openai
+scipy
+python-dotenv
