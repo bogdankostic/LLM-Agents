@@ -50,5 +50,10 @@ python src/assess_performance.py \
 ### 7) Rerank Retrieved Papers
 To rerank the retrieved papers using LLMs and evaluate the results, run the following command:
 ```bash
-TODO
+python src/rerank.py \
+  --rankings <PATH_TO_RANKINGS_JSON_OUTPUT_BY_STEP6> \
+  --comments <PATH_TO_CSV_WITH_SAMPLE_COMMENTS> \
+  --model <ONE OF "gemini", "gpt4omini", "gpt3.5", OR "llama"> \
+  --k <K TOP PAPERS ARE INCLUDED IN PROMPT, DEFAULT 10> \
+  --o <OUTPUT CSV FOR RESULTS>
 ```
